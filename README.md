@@ -28,4 +28,4 @@ To run the project
 ```bash
 node server.js
 ```
-And when the server gets connected run the HTML file
+* when the server gets connected run the index.html file
