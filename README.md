@@ -1,14 +1,15 @@
-# farm-management-big-data-
+# Farm Management Big Data Project
 
-#Initialize the Project:
-<br>
+## Initialize the Project
+
+```bash
 mkdir farm-management
-<br>
 cd farm-management
-<br>
 npm init -y
+```
+##Install Dependencies
 
-<br>
-#Install Dependencies:
-<br>
+
+```bash
 npm install express mongoose body-parser cors
+```
