@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Farm Management</title>
+    <style>
+        body {
+            font-family: Georgia, serif;
+            background-image: url('agro-products.jpg');
+            background-size: cover;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.8);
+            padding: 35px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            width: 126%;
+            max-width: 685px;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        input, textarea, select {
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px;
+            background: #28a745;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .product-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 20px;
+        }
+        .product {
+            width: calc(30% - 20px);
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 4px;
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            padding: 11px;
+        }
+        .product:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+        }
+        .product-details {
+            padding: 10px;
+        }
+        .product-actions {
+            display: flex;
+            justify-content: space-between;
+        }
+        .product-actions button {
+            margin-left: 25px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="login-container">
+        <h2>Login</h2>
+        <form id="loginForm">
+            <input type="text" id="username" placeholder="Username" required>
+            <input type="password" id="password" placeholder="Password" required>
+            <button type="submit">Login</button>
+        </form>
+        <p>Don't have an account? <a href="#" id="showRegister">Register here</a></p>
+    </div>
+    <div class="container" id="register-container" style="display:none;">
+        <h2>Register</h2>
+        <form id="registerForm">
+            <input type="text" id="registerUsername" placeholder="Username" required>
+            <input type="password" id="registerPassword" placeholder="Password" required>
+            <button type="submit">Register</button>
+        </form>
+        <p>Already have an account? <a href="#" id="showLogin">Login here</a></p>
+    </div>
+    <div class="container" id="product-container" style="display:none;">
+        <h2>Product Entry</h2>
+        <form id="productForm">
+            <input type="text" id="name" placeholder="Product Name" required>
+            <textarea id="description" placeholder="Product Description" required></textarea>
+            <input type="number" id="price" placeholder="Price" required>
+            <select id="type" required>
+                <option value="" disabled selected>Type of Farming</option>
+                <option value="Organic">Organic</option>
+                <option value="Conventional">Conventional</option>
+            </select>
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+    <div class="container" id="productList-container" style="display:none;">
+        <h2>Product List</h2>
+        <div id="productList" class="product-grid"></div>
+    </div>
+    <script>
+        const loginForm = document.getElementById('loginForm');
+        const registerForm = document.getElementById('registerForm');
+        const productForm = document.getElementById('productForm');
+        const productList = document.getElementById('productList');
+        const loginContainer = document.getElementById('login-container');
+        const registerContainer = document.getElementById('register-container');
+        const productContainer = document.getElementById('product-container');
+        const productListContainer = document.getElementById('productList-container');
+        const showRegisterLink = document.getElementById('showRegister');
+        const showLoginLink = document.getElementById('showLogin');
+
+        showRegisterLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            loginContainer.style.display = 'none';
+            registerContainer.style.display = 'block';
+        });
+
+        showLoginLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            registerContainer.style.display = 'none';
+            loginContainer.style.display = 'block';
+        });
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const credentials = {
+                username: document.getElementById('username').value,
+                password: document.getElementById('password').value
+            };
+
+            try {
+                const response = await fetch('http://localhost:5000/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(credentials)
+                });
+
+                if (response.ok) {
+                    alert('Login successful!');
+                    loginContainer.style.display = 'none';
+                    productContainer.style.display = 'block';
+                    productListContainer.style.display = 'block';
+                    fetchProducts();
+                } else {
+                    alert('Invalid credentials.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error logging in.');
+            }
+        });
+
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const newUser = {
+                username: document.getElementById('registerUsername').value,
+                password: document.getElementById('registerPassword').value
+            };
+
+            try {
+                const response = await fetch('http://localhost:5000/api/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(newUser)
+                });
+
+                const responseData = await response.json(); // Parse response as JSON
+
+                if (response.ok) {
+                    alert('Registration successful! Please login.');
+                    showLoginLink.click(); // Switch to login form after successful registration
+                } else {
+                    alert(responseData.message || 'Error registering user.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error registering user.');
+            }
+        });
+
+        productForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const product = {
+                name: document.getElementById('name').value,
+                description: document.getElementById('description').value,
+                price: document.getElementById('price').value,
+                type: document.getElementById('type').value,
+            };
+
+            try {
+                const response = await fetch('http://localhost:5000/api/products', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(product)
+                });
+
+                if (response.ok) {
+                    alert('Product added successfully!');
+                    productForm.reset();
+                    fetchProducts();
+                } else {
+                    alert('Error adding product.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error adding product.');
+            }
+        });
+
+        async function fetchProducts() {
+            try {
+                const response = await fetch('http://localhost:5000/api/products');
+                if (!response.ok) {
+                    throw new Error('Failed to fetch products');
+                }
+                const products = await response.json();
+                productList.innerHTML = '';
+                products.forEach(product => {
+                    const productDiv = document.createElement('div');
+                    productDiv.classList.add('product');
+                    productDiv.innerHTML = `
+                        <h3>${product.name}</h3>
+                        <p>${product.description}</p>
+                        <p>Price: $${product.price}</p>
+                        <p>Type: ${product.type}</p>
+                        <div class="product-actions">
+                            <button onclick="editProduct('${product._id}')">Edit</button>
+                            <button onclick="deleteProduct('${product._id}')">Delete</button>
+                        </div>
+                    `;
+                    productList.appendChild(productDiv);
+                });
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error fetching products.');
+            }
+        }
+
+        async function editProduct(id) {
+            const name = prompt('Enter new product name');
+            const description = prompt('Enter new product description');
+            const price = prompt('Enter new product price');
+            const type = prompt('Enter new type of farming');
+
+            const product = {
+                name,
+                description,
+                price,
+                type
+            };
+
+            try {
+                const response = await fetch(`http://localhost:5000/api/products/${id}`, {
+method: 'PUT',
+headers: {
+'Content-Type': 'application/json'
+},
+body: JSON.stringify(product)
+});
+if (response.ok) {
+                alert('Product updated successfully!');
+                fetchProducts();
+            } else {
+                alert('Error updating product.');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error updating product.');
+        }
+    }
+
+    async function deleteProduct(id) {
+        try {
+            const response = await fetch(`http://localhost:5000/api/products/${id}`, {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                alert('Product deleted successfully!');
+                fetchProducts();
+            } else {
+                alert('Error deleting product.');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error deleting product.');
+        }
+    }
+
+    fetchProducts();
+</script>
