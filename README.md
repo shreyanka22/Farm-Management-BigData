@@ -7,7 +7,7 @@ mkdir farm-management
 cd farm-management
 npm init -y
 ```
-##Install Dependencies
+## Install Dependencies
 
 
 ```bash
